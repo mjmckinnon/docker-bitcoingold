@@ -60,6 +60,6 @@ RUN \
     && rm -rf /tmp/* /var/tmp/*
 
 ENV DATADIR="/data"
-EXPOSE 22556
+EXPOSE 8338
 VOLUME /data
 CMD ["bgoldd", "-printtoconsole"]
