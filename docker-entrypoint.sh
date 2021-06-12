@@ -16,8 +16,8 @@ if [ "$1" = 'bgoldd' -a "$(id -u)" = '0' ]; then
 	exec gosu btcgold "$0" "$@" -datadir=$DATADIR
 fi
 
-if [ "$1" = 'bgoldd-cli' -a "$(id -u)" = '0' ] || [ "$1" = 'bitcoin-tx' -a "$(id -u)" = '0' ]; then
-	echo "$0: detected bgoldd-cli or bitcoin-tx"
+if [ "$1" = 'bgold-cli' -a "$(id -u)" = '0' ] || [ "$1" = 'bitcoin-tx' -a "$(id -u)" = '0' ]; then
+	echo "$0: detected bgold-cli or bitcoin-tx"
 	exec gosu btcgold "$0" "$@" -datadir=$DATADIR
 fi
 
