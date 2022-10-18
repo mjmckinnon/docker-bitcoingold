@@ -25,7 +25,7 @@ RUN \
     && cd .. && rm -rf ${GITREPO}
 
 # Final stage
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 LABEL maintainer="Michael J. McKinnon <mjmckinnon@gmail.com>"
 
 # Put our entrypoint script in
@@ -46,12 +46,12 @@ RUN \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     gosu \
-    libboost-filesystem1.71.0 \
-    libboost-thread1.71.0 \
+    libboost-filesystem1.74.0 \
+    libboost-thread1.74.0 \
     libevent-2.1-7 \
     libevent-pthreads-2.1-7 \
-    libboost-program-options1.71.0 \
-    libboost-chrono1.71.0 \
+    libboost-program-options1.74.0 \
+    libboost-chrono1.74.0 \
     libb2-1 \
     libczmq4 \
     && apt-get clean autoclean \
