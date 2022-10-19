@@ -1,0 +1,269 @@
+diff --git a/src/crypto/equihash.cpp b/src/crypto/equihash.cpp
+index 19ab1215a..b1ed12355 100644
+--- a/src/crypto/equihash.cpp
++++ b/src/crypto/equihash.cpp
+@@ -456,8 +456,9 @@ bool Equihash<N,K>::BasicSolve(const eh_HashState& base_state,
+             i += j;
+             if (cancelled(FinalColliding)) throw solver_cancelled;
+         }
+-    } else
+-        LogPrint(BCLog::POW, "- List is empty\n");
++    } else {
++	LogPrint(BCLog::POW, "- List is empty\n");
++    }
+ 
+     return false;
+ }
+@@ -640,8 +641,9 @@ bool Equihash<N,K>::OptimisedSolve(const eh_HashState& base_state,
+                 i += j;
+                 if (cancelled(FinalColliding)) throw solver_cancelled;
+             }
+-        } else
++        } else {
+             LogPrint(BCLog::POW, "- List is empty\n");
++	}
+ 
+     } // Ensure Xt goes out of scope and is destroyed
+ 
+diff --git a/src/httpserver.cpp b/src/httpserver.cpp
+index 2a76d0d46..18db5171a 100644
+--- a/src/httpserver.cpp
++++ b/src/httpserver.cpp
+@@ -13,6 +13,7 @@
+ #include <sync.h>
+ #include <ui_interface.h>
+ 
++#include <deque>
+ #include <memory>
+ #include <stdio.h>
+ #include <stdlib.h>
+diff --git a/src/init.cpp b/src/init.cpp
+index 2d0174f4e..58148f23c 100644
+--- a/src/init.cpp
++++ b/src/init.cpp
+@@ -56,7 +56,7 @@
+ #include <boost/algorithm/string/classification.hpp>
+ #include <boost/algorithm/string/replace.hpp>
+ #include <boost/algorithm/string/split.hpp>
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <boost/interprocess/sync/file_lock.hpp>
+ #include <boost/thread.hpp>
+ #include <openssl/crypto.h>
+diff --git a/src/rpc/server.cpp b/src/rpc/server.cpp
+index 7a3155e99..1641223b6 100644
+--- a/src/rpc/server.cpp
++++ b/src/rpc/server.cpp
+@@ -14,7 +14,7 @@
+ #include <util.h>
+ #include <utilstrencodings.h>
+ 
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <boost/signals2/signal.hpp>
+ #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
+ #include <boost/algorithm/string/classification.hpp>
+@@ -509,7 +509,7 @@ std::vector<std::string> CRPCTable::listCommands() const
+ 
+     std::transform( mapCommands.begin(), mapCommands.end(),
+                    std::back_inserter(commandList),
+-                   boost::bind(&commandMap::value_type::first,_1) );
++                   boost::bind(&commandMap::value_type::first,boost::placeholders::_1) );
+     return commandList;
+ }
+ 
+diff --git a/src/scheduler.cpp b/src/scheduler.cpp
+index 89dfc2b36..384a730a0 100644
+--- a/src/scheduler.cpp
++++ b/src/scheduler.cpp
+@@ -8,7 +8,7 @@
+ #include <reverselock.h>
+ 
+ #include <assert.h>
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <utility>
+ 
+ CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
+diff --git a/src/test/scheduler_tests.cpp b/src/test/scheduler_tests.cpp
+index 2af0ab22d..3e159f563 100644
+--- a/src/test/scheduler_tests.cpp
++++ b/src/test/scheduler_tests.cpp
+@@ -7,7 +7,7 @@
+ 
+ #include <test/test_bitcoin.h>
+ 
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <boost/thread.hpp>
+ #include <boost/test/unit_test.hpp>
+ 
+diff --git a/src/torcontrol.cpp b/src/torcontrol.cpp
+index c88f61f1e..6d3791eca 100644
+--- a/src/torcontrol.cpp
++++ b/src/torcontrol.cpp
+@@ -15,7 +15,7 @@
+ #include <set>
+ #include <stdlib.h>
+ 
+-#include <boost/bind.hpp>
++#include <boost/bind/bind.hpp>
+ #include <boost/signals2/signal.hpp>
+ #include <boost/algorithm/string/split.hpp>
+ #include <boost/algorithm/string/classification.hpp>
+@@ -459,8 +459,8 @@ TorController::TorController(struct event_base* _base, const std::string& _targe
+     if (!reconnect_ev)
+         LogPrintf("tor: Failed to create event for reconnection: out of memory?\n");
+     // Start connection attempts immediately
+-    if (!conn.Connect(_target, boost::bind(&TorController::connected_cb, this, _1),
+-         boost::bind(&TorController::disconnected_cb, this, _1) )) {
++    if (!conn.Connect(_target, boost::bind(&TorController::connected_cb, this, boost::placeholders::_1),
++         boost::bind(&TorController::disconnected_cb, this, boost::placeholders::_1) )) {
+         LogPrintf("tor: Initiating connection to Tor control port %s failed\n", _target);
+     }
+     // Read service private key if cached
+@@ -538,7 +538,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply&
+         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
+         // choice.  TODO; refactor the shutdown sequence some day.
+         _conn.Command(strprintf("ADD_ONION %s Port=%i,127.0.0.1:%i", private_key, GetListenPort(), GetListenPort()),
+-            boost::bind(&TorController::add_onion_cb, this, _1, _2));
++            boost::bind(&TorController::add_onion_cb, this, boost::placeholders::_1, boost::placeholders::_2));
+     } else {
+         LogPrintf("tor: Authentication failed\n");
+     }
+@@ -597,7 +597,7 @@ void TorController::authchallenge_cb(TorControlConnection& _conn, const TorContr
+             }
+ 
+             std::vector<uint8_t> computedClientHash = ComputeResponse(TOR_SAFE_CLIENTKEY, cookie, clientNonce, serverNonce);
+-            _conn.Command("AUTHENTICATE " + HexStr(computedClientHash), boost::bind(&TorController::auth_cb, this, _1, _2));
++            _conn.Command("AUTHENTICATE " + HexStr(computedClientHash), boost::bind(&TorController::auth_cb, this, boost::placeholders::_1, boost::placeholders::_2));
+         } else {
+             LogPrintf("tor: Invalid reply to AUTHCHALLENGE\n");
+         }
+@@ -646,13 +646,13 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
+             if (methods.count("HASHEDPASSWORD")) {
+                 LogPrint(BCLog::TOR, "tor: Using HASHEDPASSWORD authentication\n");
+                 boost::replace_all(torpassword, "\"", "\\\"");
+-                _conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, _1, _2));
++                _conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, boost::placeholders::_1, boost::placeholders::_2));
+             } else {
+                 LogPrintf("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available\n");
+             }
+         } else if (methods.count("NULL")) {
+             LogPrint(BCLog::TOR, "tor: Using NULL authentication\n");
+-            _conn.Command("AUTHENTICATE", boost::bind(&TorController::auth_cb, this, _1, _2));
++            _conn.Command("AUTHENTICATE", boost::bind(&TorController::auth_cb, this, boost::placeholders::_1, boost::placeholders::_2));
+         } else if (methods.count("SAFECOOKIE")) {
+             // Cookie: hexdump -e '32/1 "%02x""\n"'  ~/.tor/control_auth_cookie
+             LogPrint(BCLog::TOR, "tor: Using SAFECOOKIE authentication, reading cookie authentication from %s\n", cookiefile);
+@@ -662,7 +662,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
+                 cookie = std::vector<uint8_t>(status_cookie.second.begin(), status_cookie.second.end());
+                 clientNonce = std::vector<uint8_t>(TOR_NONCE_SIZE, 0);
+                 GetRandBytes(clientNonce.data(), TOR_NONCE_SIZE);
+-                _conn.Command("AUTHCHALLENGE SAFECOOKIE " + HexStr(clientNonce), boost::bind(&TorController::authchallenge_cb, this, _1, _2));
++                _conn.Command("AUTHCHALLENGE SAFECOOKIE " + HexStr(clientNonce), boost::bind(&TorController::authchallenge_cb, this, boost::placeholders::_1, boost::placeholders::_2));
+             } else {
+                 if (status_cookie.first) {
+                     LogPrintf("tor: Authentication cookie %s is not exactly %i bytes, as is required by the spec\n", cookiefile, TOR_COOKIE_SIZE);
+@@ -684,7 +684,7 @@ void TorController::connected_cb(TorControlConnection& _conn)
+ {
+     reconnect_timeout = RECONNECT_TIMEOUT_START;
+     // First send a PROTOCOLINFO command to figure out what authentication is expected
+-    if (!_conn.Command("PROTOCOLINFO 1", boost::bind(&TorController::protocolinfo_cb, this, _1, _2)))
++    if (!_conn.Command("PROTOCOLINFO 1", boost::bind(&TorController::protocolinfo_cb, this, boost::placeholders::_1, boost::placeholders::_2)))
+         LogPrintf("tor: Error sending initial protocolinfo command\n");
+ }
+ 
+@@ -711,8 +711,8 @@ void TorController::Reconnect()
+     /* Try to reconnect and reestablish if we get booted - for example, Tor
+      * may be restarting.
+      */
+-    if (!conn.Connect(target, boost::bind(&TorController::connected_cb, this, _1),
+-         boost::bind(&TorController::disconnected_cb, this, _1) )) {
++    if (!conn.Connect(target, boost::bind(&TorController::connected_cb, this, boost::placeholders::_1),
++         boost::bind(&TorController::disconnected_cb, this, boost::placeholders::_1) )) {
+         LogPrintf("tor: Re-initiating connection to Tor control port %s failed\n", target);
+     }
+ }
+diff --git a/src/validation.cpp b/src/validation.cpp
+index d514a2537..e3eec7979 100644
+--- a/src/validation.cpp
++++ b/src/validation.cpp
+@@ -2432,11 +2432,11 @@ private:
+ 
+ public:
+     explicit ConnectTrace(CTxMemPool &_pool) : blocksConnected(1), pool(_pool) {
+-        pool.NotifyEntryRemoved.connect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, _1, _2));
++        pool.NotifyEntryRemoved.connect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, boost::placeholders::_1, boost::placeholders::_2));
+     }
+ 
+     ~ConnectTrace() {
+-        pool.NotifyEntryRemoved.disconnect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, _1, _2));
++        pool.NotifyEntryRemoved.disconnect(boost::bind(&ConnectTrace::NotifyEntryRemoved, this, boost::placeholders::_1, boost::placeholders::_2));
+     }
+ 
+     void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
+diff --git a/src/validationinterface.cpp b/src/validationinterface.cpp
+index 248e774a8..630fa992d 100644
+--- a/src/validationinterface.cpp
++++ b/src/validationinterface.cpp
+@@ -60,11 +60,11 @@ size_t CMainSignals::CallbacksPending() {
+ }
+ 
+ void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
+-    pool.NotifyEntryRemoved.connect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, _1, _2));
++    pool.NotifyEntryRemoved.connect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, boost::placeholders::_1, boost::placeholders::_2));
+ }
+ 
+ void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
+-    pool.NotifyEntryRemoved.disconnect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, _1, _2));
++    pool.NotifyEntryRemoved.disconnect(boost::bind(&CMainSignals::MempoolEntryRemoved, this, boost::placeholders::_1, boost::placeholders::_2));
+ }
+ 
+ CMainSignals& GetMainSignals()
+@@ -73,27 +73,27 @@ CMainSignals& GetMainSignals()
+ }
+ 
+ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
+-    g_signals.m_internals->UpdatedBlockTip.connect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
+-    g_signals.m_internals->TransactionAddedToMempool.connect(boost::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, _1));
+-    g_signals.m_internals->BlockConnected.connect(boost::bind(&CValidationInterface::BlockConnected, pwalletIn, _1, _2, _3));
+-    g_signals.m_internals->BlockDisconnected.connect(boost::bind(&CValidationInterface::BlockDisconnected, pwalletIn, _1));
+-    g_signals.m_internals->TransactionRemovedFromMempool.connect(boost::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, _1));
+-    g_signals.m_internals->ChainStateFlushed.connect(boost::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, _1));
+-    g_signals.m_internals->Broadcast.connect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
+-    g_signals.m_internals->BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
+-    g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
++    g_signals.m_internals->UpdatedBlockTip.connect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3));
++    g_signals.m_internals->TransactionAddedToMempool.connect(boost::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->BlockConnected.connect(boost::bind(&CValidationInterface::BlockConnected, pwalletIn, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3));
++    g_signals.m_internals->BlockDisconnected.connect(boost::bind(&CValidationInterface::BlockDisconnected, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->TransactionRemovedFromMempool.connect(boost::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->ChainStateFlushed.connect(boost::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->Broadcast.connect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
++    g_signals.m_internals->BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
++    g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
+ }
+ 
+ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
+-    g_signals.m_internals->BlockChecked.disconnect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
+-    g_signals.m_internals->Broadcast.disconnect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, _1, _2));
+-    g_signals.m_internals->ChainStateFlushed.disconnect(boost::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, _1));
+-    g_signals.m_internals->TransactionAddedToMempool.disconnect(boost::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, _1));
+-    g_signals.m_internals->BlockConnected.disconnect(boost::bind(&CValidationInterface::BlockConnected, pwalletIn, _1, _2, _3));
+-    g_signals.m_internals->BlockDisconnected.disconnect(boost::bind(&CValidationInterface::BlockDisconnected, pwalletIn, _1));
+-    g_signals.m_internals->TransactionRemovedFromMempool.disconnect(boost::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, _1));
+-    g_signals.m_internals->UpdatedBlockTip.disconnect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, _1, _2, _3));
+-    g_signals.m_internals->NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
++    g_signals.m_internals->BlockChecked.disconnect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
++    g_signals.m_internals->Broadcast.disconnect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
++    g_signals.m_internals->ChainStateFlushed.disconnect(boost::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->TransactionAddedToMempool.disconnect(boost::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->BlockConnected.disconnect(boost::bind(&CValidationInterface::BlockConnected, pwalletIn, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3));
++    g_signals.m_internals->BlockDisconnected.disconnect(boost::bind(&CValidationInterface::BlockDisconnected, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->TransactionRemovedFromMempool.disconnect(boost::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, boost::placeholders::_1));
++    g_signals.m_internals->UpdatedBlockTip.disconnect(boost::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, boost::placeholders::_1, boost::placeholders::_2, boost::placeholders::_3));
++    g_signals.m_internals->NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, boost::placeholders::_1, boost::placeholders::_2));
+ }
+ 
+ void UnregisterAllValidationInterfaces() {

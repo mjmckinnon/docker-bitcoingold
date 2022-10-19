@@ -10,8 +10,12 @@ ENV DEBIAN_FRONTEND="noninteractive"
 WORKDIR /root
 RUN git clone ${GITREPO} --branch ${VERSION}
 WORKDIR /root/${GITNAME}
+# Copy some kludge patches to make this thing compiled under Ubuntu 22.04
+COPY ./*.patch ./
 RUN \
-    echo "** compile **" \
+    echo "** applying patches **" \
+    && git apply -v ./btg-*.patch \
+    && echo "** compile **" \
     && ./autogen.sh \
     && ./configure CXXFLAG="-O2" LDFLAGS=-static-libstdc++ ${COMPILEFLAGS} \
     && make \
