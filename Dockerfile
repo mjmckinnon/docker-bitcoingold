@@ -34,36 +34,38 @@ LABEL maintainer="Michael J. McKinnon <mjmckinnon@gmail.com>"
 
 # Put our entrypoint script in
 COPY ./docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Copy the compiled files
 COPY --from=builder /dist-files/ /
 
-RUN \
-    echo "** setup the btcgold user **" \
-    && groupadd -g 1000 btcgold \
-    && useradd -u 1000 -g btcgold btcgold
-
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN \
-    echo "** update and install dependencies ** " \
+    echo "** update and install dependencies **" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-    gosu \
-    libboost-filesystem1.74.0 \
-    libboost-thread1.74.0 \
-    libevent-2.1-7 \
-    libevent-pthreads-2.1-7 \
-    libboost-program-options1.74.0 \
-    libboost-chrono1.74.0 \
-    libb2-1 \
-    libczmq4 \
+       gosu \
+       libboost-filesystem1.74.0 \
+       libboost-thread1.74.0 \
+       libevent-2.1-7 \
+       libevent-pthreads-2.1-7 \
+       libboost-program-options1.74.0 \
+       libboost-chrono1.74.0 \
+       libb2-1 \
+       libczmq4 \
     && apt-get clean autoclean \
     && apt-get autoremove --yes \
     && rm -rf /var/lib/{apt,dpkg,cache,log}/ \
     && rm -rf /tmp/* /var/tmp/*
 
+RUN \
+    echo "** setup the btcgold user **" \
+    && groupadd -r btcgold \
+    && useradd --no-log-init -m -d /data -r -g btcgold btcgold
+
 ENV DATADIR="/data"
 EXPOSE 8338
 VOLUME /data
+
+USER btcgold
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["bgoldd", "-printtoconsole"]
