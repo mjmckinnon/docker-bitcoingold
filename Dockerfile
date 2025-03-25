@@ -1,6 +1,6 @@
 FROM mjmckinnon/ubuntubuild:latest as builder
 
-ARG VERSION="v0.17.3"
+ARG VERSION="v0.21.3-beta"
 ARG GITREPO="https://github.com/BTCGPU/BTCGPU.git"
 ARG GITNAME="BTCGPU"
 ARG COMPILEFLAGS="--disable-tests --disable-bench --enable-cxx --disable-shared --with-pic --disable-wallet --without-gui --without-miniupnpc"
