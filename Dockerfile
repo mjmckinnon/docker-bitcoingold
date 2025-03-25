@@ -12,8 +12,8 @@ RUN git clone ${GITREPO} --branch ${VERSION}
 WORKDIR /root/${GITNAME}
 # Copy some kludge patches to make this thing compiled under Ubuntu 22.04
 COPY ./*.patch ./
-RUN \
-    echo "** applying patches **" \
+RUN set -e \
+    && echo "** applying patches **" \
     && git apply -v ./btg-*.patch \
     && echo "** compile **" \
     && ./autogen.sh \
@@ -39,8 +39,8 @@ COPY ./docker-entrypoint.sh /
 COPY --from=builder /dist-files/ /
 
 ENV DEBIAN_FRONTEND="noninteractive"
-RUN \
-    echo "** update and install dependencies **" \
+RUN set -e \
+    && echo "** update and install dependencies **" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
        gosu \
