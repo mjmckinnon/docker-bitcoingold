@@ -2,7 +2,7 @@
 
 Bitcoin Gold (BTCGPU) container builds from source ~135MB Image
 
-Version (tag): ```v0.21.3-beta```
+Version (tag): ```v0.21.3-beta``` pre-release
 
 Compiles and runs on: ```Ubunutu 22.04```
 
